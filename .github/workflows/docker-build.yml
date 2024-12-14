@@ -1,4 +1,4 @@
-name: Build Docker Image from Forked Repository
+name: Build and Export Docker Image
 
 on:
   push:
@@ -7,26 +7,30 @@ on:
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  build:
+  build-and-export:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up QEMU (for multi-architecture support, optional)
+      uses: docker/setup-qemu-action@v2
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      uses: docker/setup-buildx-action@v2
 
-    - name: Build Docker image
+    - name: Build the Docker image
       run: |
-        docker build -t weaviate:1.28.0 .  # 使用当前目录中的 Dockerfile 构建镜像
+        docker build --tag weaviate:latest .
 
-    - name: Save Docker image as a tar file
+    - name: Save Docker image as tar
       run: |
-        docker save weaviate:1.28.0 -o weaviate1.28.tar  # 保存为 tar 文件
+        mkdir -p ./image
+        docker save -o ./image/weaviate.tar weaviate:latest
 
-    - name: Upload Docker image tar file
-      uses: actions/upload-artifact@v2
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
       with:
-        name: weaviate1.28-tar
-        path: weaviate1.28.tar  # 上传的 tar 文件路径
+        name: docker-image-tar
+        path: ./image/weaviate.tar  

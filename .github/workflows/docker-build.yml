@@ -1,0 +1,32 @@
+name: Build Docker Image from Forked Repository
+
+on:
+  push:
+    branches:
+      - main  # 或者你想要触发构建的其他分支
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build Docker image
+      run: |
+        docker build -t weaviate:1.28.0 .  # 使用当前目录中的 Dockerfile 构建镜像
+
+    - name: Save Docker image as a tar file
+      run: |
+        docker save weaviate:1.28.0 -o weaviate1.28.tar  # 保存为 tar 文件
+
+    - name: Upload Docker image tar file
+      uses: actions/upload-artifact@v2
+      with:
+        name: weaviate1.28-tar
+        path: weaviate1.28.tar  # 上传的 tar 文件路径
